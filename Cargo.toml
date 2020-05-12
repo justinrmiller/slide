@@ -12,3 +12,4 @@ fxhash = "0.2.1"
 rand = "0.7.3"
 evmap = "10.0.1"
 ordered-float = "1.0"
+uuid = { version = "0.8", features = ["v4"] }

@@ -8,34 +8,30 @@ use ordered_float::OrderedFloat;
 use evmap::{ReadHandle, WriteHandle};
 
 use rand::{Rng};
-use rand::distributions::Alphanumeric;
+
+use uuid::Uuid;
 
 const SIZE: u32 = 8 * 1024 * 1024;
 const HEAP_CAPACITY: usize = 10;
-const NTHREADS: u32 = 8;
+const NTHREADS: u32 = 4;
 
 mod state;
 use state::State;
 
-fn generate_ev_map(heap_number: u32, size: u32) -> (ReadHandle<String, Box<State>>, WriteHandle<String, Box<State>>) {
+fn generate_ev_map(heap_number: u32, size: u32) -> (ReadHandle<Uuid, Box<State>>, WriteHandle<Uuid, Box<State>>) {
     println!("Generating heap number: {} with size {}", heap_number, size);
     let (r, mut w) = evmap::new();
     let mut rng = rand::thread_rng();
 
     (0..size).for_each(|_| {
-        let id: String = rng
-        .sample_iter(&Alphanumeric)
-        .take(10)
-        .collect();
+        // let id: String = rng
+        // .sample_iter(&Alphanumeric)
+        // .take(10)
+        // .collect();
+        let id = Uuid::new_v4();
 
-        // let ranval = rng.gen_range(0.0, 1.0);
-        // let score = OrderedFloat(rng.gen_range(0.0, 1.0));
-        // let blank = "".to_string();
-
-        // let a = blank.as_bytes();
-        // let b: Box<Vec<u8>> = Box::new(a.iter().cloned().collect());
         w.insert(id, Box::new(State {
-            id: "".to_string(), 
+            id: id, 
             score: OrderedFloat(rng.gen_range(0.0, 1.0)),
             scorea: OrderedFloat(rng.gen_range(0.0, 1.0)),
             scoreb: OrderedFloat(rng.gen_range(0.0, 1.0)),
@@ -48,7 +44,7 @@ fn generate_ev_map(heap_number: u32, size: u32) -> (ReadHandle<String, Box<State
     return (r, w);
 }
 
-fn gen_ev_heap(read_handle: &ReadHandle<String, Box<State>>) -> BinaryHeap<State> {
+fn gen_ev_heap(read_handle: &ReadHandle<Uuid, Box<State>>) -> BinaryHeap<State> {
     let mut heap = BinaryHeap::<State>::with_capacity(HEAP_CAPACITY);
 
     let now = Instant::now();
@@ -58,7 +54,7 @@ fn gen_ev_heap(read_handle: &ReadHandle<String, Box<State>>) -> BinaryHeap<State
             None => println!("Oops get_one"),
             Some(val) => {
                 heap.push(State { 
-                    id: key.to_string(), 
+                    id: (*val).id, 
                     score: OrderedFloat::from((*val).scorea.into_inner() + (*val).scoreb.into_inner() + (*val).scorec.into_inner() + (*val).scored.into_inner()),
                     scorea: (*val).scorea,
                     scoreb: (*val).scoreb,
@@ -84,18 +80,6 @@ fn main() {
     println!("Initializing memory with capacity {}...", SIZE);
 
     let mut maps = Box::new(Vec::new());
-    // for i in 0..NTHREADS {
-    //     maps.push(generate_ev_map(i, SIZE / NTHREADS));
-    // }
-
-    // for i in 0..NTHREADS {
-    //     // Spin up another thread
-    //    let (reader, _) = &maps[i as usize];
-
-    //     thread::spawn(move || {
-    //         &maps.push(generate_ev_map(i, SIZE / NTHREADS));
-    //     });
-    // }
 
     use std::sync::mpsc;
     

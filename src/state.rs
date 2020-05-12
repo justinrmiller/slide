@@ -1,9 +1,10 @@
 use ordered_float::OrderedFloat;
 use std::cmp::Ordering;
+use uuid::Uuid;
 
 #[derive(Clone, Hash)]
 pub struct State {
-    pub id: String,
+    pub id: Uuid,
     pub score: OrderedFloat<f32>,
     pub scorea: OrderedFloat<f32>,
     pub scoreb: OrderedFloat<f32>,
